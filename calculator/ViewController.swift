@@ -13,7 +13,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var display: UILabel!
 
     var userIsInTheMiddleOfTypingANumber = false
-    var operandStack = Array<Double>()
+    
+    var brain = CalculatorBrain()
+    
     var displayValue: Double {
         get {
             return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
@@ -37,35 +39,25 @@ class ViewController: UIViewController {
     
     @IBAction func enter() {
         userIsInTheMiddleOfTypingANumber = false
-        operandStack.append(displayValue)
-        println("operandStack = \(operandStack)")
+        if let result = brain.pushOperand(displayValue){
+            displayValue = result
+        }
+        else{
+            displayValue = 0 // displayValue should be an optional so can display err
+        }
     }
+    
     @IBAction func operate(sender: UIButton) {
-        let operation = sender.currentTitle!
         if userIsInTheMiddleOfTypingANumber {
             enter()
         }
-        switch operation {
-        case "×": performOperation { $0 * $1 }
-        case "÷": performOperation { $1 / $0 }
-        case "−": performOperation { $0 - $1 }
-        case "+": performOperation { $1 + $0 }
-        case "√": performOperation { sqrt($0) }
-        default: break
-        }
-    }
-    
-    private func performOperation(operation: Double -> Double) {
-        if operandStack.count >= 1 {
-            displayValue = operation(operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    private func performOperation(operation: (Double, Double) -> Double) {
-        if operandStack.count >= 2 {
-            displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            enter()
+        if let operation = sender.currentTitle {
+            if let result = brain.performOperation(operation) {
+                displayValue = result
+            }
+            else {
+                displayValue = 0
+            }
         }
     }
 }
